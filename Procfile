@@ -1,1 +1,1 @@
-web: gunicorn antife.wsgi.application --log-file -
+web gunicorn antife.wsgi.application --log-file -
