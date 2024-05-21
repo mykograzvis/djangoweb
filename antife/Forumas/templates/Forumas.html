@@ -1,0 +1,481 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Forumas
+{% endblock %}
+
+{% block content %}
+<div id="message-container" class="alert" style="display: none;"></div>
+<div class="container">
+    <div class="row justify-content-center">
+        <h1 class="text-center">Forumas</h1>
+    </div>
+    <div class="row justify-content-center">
+        <!-- Button to toggle the form visibility -->
+        <button id="toggle-form-btn" class="btn btn-primary mb-3 custom-buttonn">Sukurti naują temą</button>
+    </div>
+
+    <!-- Form to allow users to create a new topic (initially hidden) -->
+    <form id="create-topic-form" method="post" action="{% url 'Forumas:create_topic' %}" style="display: none;">
+        {% csrf_token %}
+        <div class="form-group">
+            <label for="topic_title">Temos pavadinimas:</label>
+            <input type="text" class="form-control" id="topic_title" name="title" required>
+        </div>
+        <div class="form-group">
+            <label for="recipient">Kam:</label>
+            <select class="form-control" id="recipient" name="recipient" required>
+                <option value="Daktarui">Daktarui</option>
+                <option value="Bendruomenei">Bendruomenei</option>
+                <option value="Moderatoriams">Moderatoriams</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="post_text">Tekstas:</label>
+            <div id="editor" style="height: 300px;"></div> <!-- This div will be replaced by Quill.js -->
+            <input type="hidden" name="text" id="hidden_input"> <!-- Hidden input to store Quill's HTML content -->
+        </div>
+        <button type="submit" class="btn btn-primary">Sukurti tema</button>
+    </form>
+</div>
+            <!-- Interactive segments -->
+            <div class="segment-container">
+                <button type="button" class="segment-btn">Klausimai gydytojui</button>
+                <button type="button" class="segment-btn">Klausimai bendruomenei</button>
+                <button type="button" class="segment-btn">Klausimai moderatoriams</button>
+            </div>
+            <div class="container d-flex justify-content-center">
+                <!-- Dropdown menus to select comment and post ordering -->
+                <div class="form-group d-flex">
+                    <!-- Dropdown for comment ordering -->
+                    <div class="mr-3">
+                        <label for="comment-order" class="mr-2">Rūšiuoti komentarus pagal:</label>
+                        <select class="form-control" id="comment-order">
+                            <option value="likes_desc">Populiariausi</option>
+                            <option value="date_desc">Naujausi</option>
+                        </select>
+                    </div>
+                    <!-- Dropdown for post ordering -->
+                    <div>
+                        <label for="post-order" class="mr-2">Rūšiuoti įrašus pagal:</label>
+                        <select class="form-control" id="post-order">
+                            <option value="likes_desc">Populiariausi</option>
+                            <option value="date_desc">Naujausi</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </form>
+
+        <hr>
+
+            <!-- Display existing topics -->
+{% if topics %}
+{% for irasas in topics %}
+    <div class="card mb-3" data-category="{{ irasas.category }}">
+        <div class="card-body">
+            <h5 class="card-title" onclick="togglePost('{{ irasas.id }}')">{{ irasas.pavadinimas }}</h5>
+            <div id="post_{{ irasas.id }}" style="display: none;">
+                <div>
+                    {{ irasas.tekstas| safe }}
+                    <h5 class="card-header" style="font-size: 14px; background-color: #f8f9fa; border-bottom: 1px solid #dee2e6;">Paskelbė:
+                        <span style="font-weight: bold;"> {{ irasas.fk_Naudotojasid_Naudotojas.user }}</span> - {{ irasas.data }}
+                    </h5>
+                </div>
+                <div class="comment-button-container">
+                    <button class="btn btn-sm btn-outline-primary float-right" onclick="toggleComments('{{ irasas.id }}')">Pridėti komentarą</button>
+                </div>
+                <!-- Comments section -->
+                <div id="comments_{{ irasas.id }}" style="display: none;">
+                    
+                    <!-- Comment form -->
+                    <form method="post" action="{% url 'Forumas:add_comment' irasas.id %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="irasas_id" value="{{ irasas.id }}">
+                        <div class="form-group">
+                            <label for="comment_text">Komentaras:</label>
+                            <textarea class="form-control" id="comment_text_{{ irasas.id }}" name="text" rows="3" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">Pateikti</button>
+                    </form>
+                </div>
+                <div>
+                    <!-- Display existing comments -->
+                    {% for comment in irasas.komentarai_set.all %}
+                    <div class="comment" id="comment_{{ comment.id }}">
+                        <p>{{ comment.tekstas }}</p>
+                        <p><small>Paskelbė {{ comment.fk_Naudotojasid_Naudotojas.user }} {{ comment.data }}</small></p>
+                        <!-- Render delete button if the logged-in user is the owner of the comment -->
+                        {% if comment.fk_Naudotojasid_Naudotojas.user == request.user %}
+                        <button type="button" class="btn btn-danger" onclick="deleteComment('{{ comment.id }}')">
+                            <i class="fas fa-trash-alt"></i> <!-- Trash bin icon -->
+                        </button>
+                        {% endif %}
+                        
+                        <!-- Like/unlike button -->
+                        <button type="button" class="like-button" aria-label="Like" onclick="likeComment('{{ comment.id }}')">
+                            <i id="like_icon_{{ comment.id }}" class="far fa-heart"></i>
+                        </button>
+                        <!-- Display count of likes -->
+                        <span id="like_count_{{ comment.id }}">Likes: {{ comment.likes.count }}</span>
+                    </div>
+                {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+{% endfor %}
+{% else %}
+<p>No topics yet.</p>
+{% endif %}
+    </div>
+
+    <!-- Display messages -->
+    {% if messages %}
+        <div class="alert alert-{{ messages.tags }}">
+            {% for message in messages %}
+                {{ message }}
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <style>
+
+        .custom-buttonn {
+        background-color: #ff9500;
+        border-color: #ff9500;
+        color: #fff;
+        padding: 10px 20px;
+        border-radius: 10px;
+        font-size: 16px;
+        font-weight: bold;
+        cursor: pointer;
+        transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Hover effect */
+        .custom-buttonn:hover {
+        background-color: #ffa07a;
+        border-color: #ffa07a;
+        color: #fff;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Focus effect */
+        .custom-buttonn:focus {
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.5);
+        outline: none;
+        }
+
+        /* Active effect */
+        .custom-buttonn:active {
+        background-color: #ff7f00;
+        border-color: #ff7f00;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.4);
+        }
+
+        .comment-button-container {
+            margin-top: 10px; /* Adjust as needed */
+            margin-bottom: 10px; /* Adjust as needed */
+        }
+        .segment-container {
+            margin-top: 10px;
+            display: flex;
+        }
+
+        .segment-btn {
+            flex: 1; /* Make each segment take up equal space */
+            background-color: #007bff;
+            color: #fff;
+            border: 2px solid transparent;
+            padding: 10px 20px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 30px; /* Rounded corners */
+            transition: all 0.3s ease; /* Smooth transition */
+        }
+
+        .segment-btn:last-child {
+            margin-right: 0; /* Remove margin from the last segment */
+        }
+
+        .segment-btn:hover {
+            background-color: #0056b3; /* Darker background color on hover */
+            border-color: #0056b3; /* Darker border color on hover */
+        }
+        /* CSS for the interactive heart icon */
+        .like-button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        .like-button:hover .far.fa-heart {
+            color: red; /* Change color on hover */
+        }
+
+        .like-button:hover .fas.fa-heart {
+            color: inherit; /* Maintain color on hover */
+        }
+
+        .like-button:focus {
+            outline: none; /* Remove outline on focus */
+        }
+        /* Remove the margin */
+        .styled-box {
+            border: 1px solid #ccc;
+            padding: 10px;
+            /* Remove the margin */
+            margin: 0;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+
+        /* Remove the bullet point */
+        .no-dot {
+            list-style-type: none;
+            padding: 0;
+        }
+
+        /* Style for comments */
+        .comment-wrapper {
+            margin-bottom: 20px; /* Add some bottom margin to separate comments */
+        }
+
+        .comment {
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            background-color: #f0f0f0;
+        }
+    </style>
+
+    <script src="https://cdn.quilljs.com/1.3.6/quill.js"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+
+    <script>
+        function likeComment(commentId) {
+            fetch("{% url 'Forumas:like_comment' 0 %}".replace('0', commentId), {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                handleLikeResponse(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Handle AJAX response from like button click
+        function handleLike(event, commentId) {
+            event.preventDefault(); // Prevent default form submission
+            
+            var formData = new FormData(event.target);
+            var url = event.target.action;
+
+            fetch(url, {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}'
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                handleLikeResponse(data);
+            })
+            .catch(error => console.error('Error:', error));
+        }
+
+        // Handle AJAX response from like button click
+        function handleLikeResponse(response) {
+            showMessage(response.message, response.type);
+        }
+        
+        var quill = new Quill('#editor', {
+        theme: 'snow'
+    });
+
+    // Get the hidden input field
+    var hiddenInput = document.getElementById('hidden_input');
+
+    // Listen for changes in the Quill editor
+    quill.on('text-change', function() {
+        // Update the value of the hidden input field with the HTML content from Quill
+        hiddenInput.value = quill.root.innerHTML;
+    });
+
+    // Function to map button text to category names stored in the database
+    function mapButtonToCategory(buttonText) {
+        switch (buttonText) {
+            case "Klausimai gydytojui":
+                return "Daktarui";
+            case "Klausimai bendruomenei":
+                return "Bendruomenei";
+            case "Klausimai moderatoriams":
+                return "Moderatoriams";
+            default:
+                return null; // Return null for unknown category names
+        }
+    }
+
+// Function to handle filtering topics by category
+function filterTopicsByCategory(category, topicCards) {
+    console.log("Selected category:", category);
+
+    topicCards.forEach(function(card) {
+        if (card) {
+            var cardCategory = card.dataset.category;
+            if (cardCategory) {
+                cardCategory = cardCategory.trim();
+            }
+            console.log("Card category:", cardCategory);
+
+            if (!category || category === "Visi" || cardCategory === category) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
+        }
+    });
+}
+
+// Attach click event listeners to category buttons
+document.querySelectorAll('.segment-btn').forEach(function(button) {
+    button.addEventListener('click', function() {
+        var categoryButtonText = this.textContent.trim(); // Get the button text
+        var category = mapButtonToCategory(categoryButtonText); // Map button text to category name
+        filterTopicsByCategory(category, document.querySelectorAll('.card')); // Pass category and topic cards to filter function
+    });
+});
+
+    // Function to handle comment ordering based on the selected option
+function orderComments() {
+    var selectedOption = document.getElementById('comment-order').value;
+    var topicCards = document.querySelectorAll('.card');
+
+    topicCards.forEach(function(card) {
+        var commentsContainer = card.querySelector('.comment-wrapper');
+        if (commentsContainer) {
+            var comments = Array.from(commentsContainer.children);
+            comments.sort(function(a, b) {
+                if (selectedOption === 'likes_desc') {
+                    // Sort by number of likes (descending)
+                    return parseInt(b.querySelector('.like-count').textContent.split(':')[1]) - parseInt(a.querySelector('.like-count').textContent.split(':')[1]);
+                } else if (selectedOption === 'date_desc') {
+                    // Sort by date (newest first)
+                    var dateA = new Date(a.querySelector('.comment-date').textContent);
+                    var dateB = new Date(b.querySelector('.comment-date').textContent);
+                    return dateB - dateA;
+                }
+            });
+            // Re-append sorted comments to the container
+            commentsContainer.innerHTML = '';
+            comments.forEach(function(comment) {
+                commentsContainer.appendChild(comment);
+            });
+        }
+    });
+}
+
+// Attach change event listener to the comment order dropdown menu
+document.getElementById('comment-order').addEventListener('change', orderComments);
+
+// Initially order comments based on the default selected option
+orderComments();
+
+
+    // Function to toggle the display of the Quill editor
+    function toggleEditor() {
+        var editor = document.getElementById('editor');
+        if (editor.style.display === 'none') {
+            editor.style.display = 'block';
+        } else {
+            editor.style.display = 'none';
+        }
+    }
+
+        function togglePost(topicId) {
+            var post = document.getElementById('post_' + topicId);
+            if (post.style.display === 'none') {
+                post.style.display = 'block';
+            } else {
+                post.style.display = 'none';
+            }
+        }
+
+        function toggleComments(topicId) {
+            var comments = document.getElementById('comments_' + topicId);
+            if (comments.style.display === 'none' || comments.style.display === '') {
+                comments.style.display = 'block';
+            } else {
+                comments.style.display = 'none'; // Toggle display style between 'none' and 'block'
+            }
+        }
+
+        function toggleAllComments(topicId) {
+            var allComments = document.getElementById('existing_comments_' + topicId);
+            if (allComments.style.display === 'none' || allComments.style.display === '') {
+                allComments.style.display = 'block';
+            } else {
+                allComments.style.display = 'none';
+            }
+        }
+
+        function showMessage(message, type) {
+            var container = document.getElementById('message-container');
+            container.innerHTML = message;
+            container.className = 'alert alert-' + type;
+            container.style.display = 'block';
+            setTimeout(function() {
+                container.style.display = 'none';
+            }, 3000); // Hide the message after 3 seconds (adjust as needed)
+        }
+
+        function deleteComment(commentId) {
+            if (confirm("Are you sure you want to delete this comment?")) {
+                fetch("{% url 'Forumas:delete_comment' %}?comment_id=" + commentId, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}'
+                    },
+                })
+                .then(response => {
+                    if (response.ok) {
+                        // If the comment is successfully deleted, remove it from the DOM
+                        var commentElement = document.getElementById('comment_' + commentId);
+                        if (commentElement) {
+                            commentElement.remove();
+                        }
+                    } else {
+                        // Handle error response
+                        console.error('Error:', response.statusText);
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            }
+        }
+        function toggleFormVisibility() {
+            var form = document.getElementById('create-topic-form');
+            var btn = document.getElementById('toggle-form-btn');
+            
+            if (form.style.display === 'none') {
+                form.style.display = 'block';
+                btn.textContent = 'Uždaryti formą'; // Change button text when form is visible
+            } else {
+                form.style.display = 'none';
+                btn.textContent = 'Sukurti naują temą'; // Change button text when form is hidden
+            }
+        }
+
+        // Attach click event listener to the toggle button
+        document.getElementById('toggle-form-btn').addEventListener('click', toggleFormVisibility);
+
+
+    </script>
+{% endblock %}

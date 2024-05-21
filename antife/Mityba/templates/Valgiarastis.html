@@ -1,0 +1,139 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+    <script src='https://cdn.jsdelivr.net/npm/fullcalendar/index.global.min.js'></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.0/locales/lt.js"></script>
+    <style>
+    body {
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
+    background-image: url("{% static 'styles/paveiksleliai/back.jpg' %}");
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+  }
+  .valgymo-container {
+  background-color: #f5f5f5;
+  padding: 15px; /* Add some padding for spacing (optional) */
+  border-radius: 5px; /* Rounded corners (optional) */
+  margin-bottom: 20px;
+}
+
+    .fc-event-title {
+        font-size: 20px;
+        font-weight: bold;
+        text-align: center;
+    }
+    .fc-event {
+        background-color: none;
+        background-color: transparent !important;
+        border: none;
+    }
+    </style>
+</head>
+<body>
+<div class="valgymo-container">
+<div id="calendar"></div>
+<button id="createBtn" name="create_button" onclick="createValgiarastis()" class="btn btn-primary" style="display: none; width: 200px; margin: auto;">Atidaryti</button>
+</div>
+</body>
+<script>
+    const createValgiarastisUrl = document.getElementById("createBtn").getAttribute("data-url");
+
+    document.addEventListener('DOMContentLoaded', function() {
+    var calendarEl = document.getElementById('calendar');
+    var calendar = new FullCalendar.Calendar(calendarEl, {
+        locale: 'lt',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: ''
+        },
+        selectable: true,
+        select: function(info) {
+            selectedDate = info.startStr;
+            updateCreateButton();
+
+            window.scrollTo({
+                top: document.body.scrollHeight,
+                behavior: 'smooth'
+            });
+        },
+        events: []
+        
+    });
+
+    var valgiarasciai = JSON.parse('{{ valgiarasciai_json|escapejs }}');
+    var phen = 'Phe: ';
+    var balt = 'Bal: ';
+    if(window.innerWidth <= 767){
+        phen = 'Phe: ';
+        balt = 'Bal: ';
+        var styleTag = document.createElement('style');
+        styleTag.innerHTML = '.fc-event-title { font-size: 16px !important; }';
+        document.head.appendChild(styleTag);
+    }
+
+    valgiarasciai.forEach(function(valgiarastis) {
+        if(valgiarastis.fields.bendras_fenilalaninas != 0 || valgiarastis.fields.bendras_baltymas!= 0) {
+            var color = valgiarastis.fields.bendras_fenilalaninas <= 620 ? 'green' : 'red';
+            calendar.addEvent({
+            title: phen + Math.round(valgiarastis.fields.bendras_fenilalaninas),
+            start: valgiarastis.fields.data,
+            textColor: color
+        });
+        calendar.addEvent({
+            title: balt + Math.round(valgiarastis.fields.bendras_baltymas, 1),
+            start: valgiarastis.fields.data,
+            textColor: color
+        });
+        }
+    });
+
+    calendar.render();
+    });
+    
+
+    let selectedDate;
+
+    function updateCreateButton() {
+        const createButtonEl = document.getElementById("createBtn");
+        createButtonEl.setAttribute("data-date", selectedDate);
+        if (selectedDate) {
+            console.log(selectedDate);
+            createButtonEl.style.display = "block";
+        } else {
+            createButtonEl.style.display = "none";
+        }
+    }
+
+    function createValgiarastis() {
+    const createButtonEl = document.getElementById("createBtn");
+    const selectedDate = createButtonEl.getAttribute("data-date");
+    if (selectedDate) {
+        fetch("{% url 'mityba:create_valgiarastis' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({
+                date_input: selectedDate
+            }),
+        })
+        .then((response) => {
+            return response.json();
+        })
+        .then((data) => {
+            localStorage.setItem('selectedDate', selectedDate);
+            window.location.href = `{% url 'mityba:valgymai_open' %}?selectedDate=${selectedDate}`;
+        });
+    }
+}
+
+
+</script>
+{% endblock %}

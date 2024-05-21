@@ -1,0 +1,23 @@
+/* styles/profilis.css */
+.profile-info {
+    width: 100%;
+}
+
+.profile-info-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    margin-bottom: 5px;
+    background-color: #f0f0f0; /* Background color for each row */
+}
+
+.profile-info-item .label {
+    flex: 1;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.profile-info-item .value {
+    flex: 3;
+}

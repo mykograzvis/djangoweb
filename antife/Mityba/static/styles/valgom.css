@@ -1,0 +1,88 @@
+/* Container */
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* List */
+.valgymai-list {
+    padding: 0;
+}
+
+/* Valgymas item */
+.valgymas-item {
+    margin-bottom: 20px;
+}
+
+/* Heading in Valgymas item */
+.valgymas-item h3 {
+    margin-bottom: 10px;
+    color: #333; /* Dark gray */
+}
+
+/* List in Valgymas item */
+.valgymo-receptas-list,
+.valgomas-produktas-list {
+    padding: 0;
+}
+
+/* List item in Valgymo receptas and Valgomas produktas */
+.valgymo-receptas-item,
+.valgomas-produktas-item {
+    margin-bottom: 5px;
+}
+
+/* Text in Valgymo receptas and Valgomas produktas */
+.valgymo-receptas-item span,
+.valgomas-produktas-item span {
+    font-weight: bold;
+    color: #007bff; /* Blue */
+}
+
+
+
+        /* General Styles */
+        body {
+            font-family: sans-serif;
+          }
+          
+          h1, h2, h3 {
+            margin-bottom: 1rem;
+          }
+          
+          /* Container */
+          .container {
+            padding: 1rem;
+          }
+          
+          /* Daily Menu List */
+          .valgymai-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+          }
+          
+          .valgymas-item {
+            margin-bottom: 1rem;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 0.5rem;
+          }
+          
+          .valgymas-item h3 {
+            margin-bottom: 0.5rem;
+          }
+          
+          /* Valgymo Receptas List */
+          .valgymo-receptas-list,
+          .valgomas-produktas-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            margin-left: 1rem;
+          }
+          
+          .valgymo-receptas-item,
+          .valgomas-produktas-item {
+            margin-bottom: 0.25rem;
+          }
+          

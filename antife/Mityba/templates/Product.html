@@ -1,0 +1,322 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}
+  Product List - Django App
+{% endblock %}
+
+{% block content %}
+<head>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css" integrity="sha512-KfkfwYDsLkIlwQp6LFnl8zNdLGxu9YAA1QvwINks4PhcElQSvqcyVLLD9aMhXd13uQjoXtEKNosOWaZqXgel0g==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <style>
+    body {
+      font-family: 'Arial', sans-serif;
+      background-color: #f4f4f4;
+      margin: 0;
+      padding: 0;
+    }
+
+    .container {
+      max-width: 1300px;
+      margin: 20px auto;
+      background-color: #fff;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .blue-text {
+      color: #3498db;
+    }
+
+    .icon-container {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-around;
+    }
+
+    .icon-wrapper {
+      text-align: center;
+      margin-bottom: 20px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .icon {
+      width: 100px; /* Adjust the width of the icons */
+      height: 80px; /* Maintain aspect ratio */
+      margin-bottom: 5px; /* Add some spacing between the icon and its name */
+      cursor: pointer; /* Add cursor pointer to indicate it's clickable */
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Add shadow */
+      transition: box-shadow 0.3s ease;
+    }
+
+    .icon-wrapper:hover {
+      transform: translateY(-5px);
+    }
+
+    .icon-wrapper.clicked .icon {
+      box-shadow: 0 0 20px rgba(31, 116, 228, 0.863); /* Increase shadow intensity */
+    }
+
+    .category-name {
+      font-size: 14px; /* Adjust font size for category names */
+    }
+
+    .table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+      font-size: 16px;
+      text-align: left;
+    }
+
+    .table th,
+    .table td {
+      padding: 12px 15px;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .table th {
+      background-color: #3498db;
+      color: #fff;
+    }
+
+    .table tbody tr:nth-child(even) {
+      background-color: #f2f2f2;
+    }
+
+    .high {
+      color: red;
+    }
+
+    .medium {
+      color: orange;
+    }
+
+    .low {
+      color: green;
+    }
+
+    .search-form {
+      margin-bottom: 20px;
+    }
+
+    .search-input {
+      width: 300px;
+      padding: 8px;
+      font-size: 16px;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+    }
+
+    .search-button {
+      padding: 8px 16px;
+      font-size: 16px;
+      background-color: #3498db;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+
+</head>
+
+<body>
+  <div class="container">
+    <h1 class="blue-text">Produktų maistingumo peržiūra</h1>
+    <div class="icon-container">
+      <!-- Display products from Amino Rugstys to Grudiniai produktai -->
+      <div class="icon-wrapper" data-category="Amino rūgštys">
+        <img src="{% static 'styles/aminorugstys.png' %}" alt="Amino Rugstys" class="icon">
+        <p class="category-name">Amino rūgštys</p>
+      </div>
+      <div class="icon-wrapper" data-category="Maisto produktai su sumažintu baltymų kiekiu">
+        <img src="{% static 'styles/sumazintibaltymai.jpg' %}" alt="sumazinti baltymai" class="icon">
+        <p class="category-name">Maisto produktai su sumažintu baltymų kiekiu</p>
+      </div>
+      <!-- Include the rest of the images and categories -->
+      <div class="icon-wrapper" data-category="Aliejai Riebalai">
+        <img src="{% static 'styles/aliejai.png' %}" alt="Aliejai Riebalai" class="icon">
+        <p class="category-name">Aliejai Riebalai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Grūdiniai">
+        <img src="{% static 'styles/grudai.jpg' %}" alt="Grūdiniai" class="icon">
+        <p class="category-name">Grūdiniai produktai</p>
+      </div>
+    </div>
+    
+    <div class="icon-container">
+      <!-- Display products from Kiti maisto produktai to Riešutai Sėklos -->
+      <div class="icon-wrapper" data-category="Kiti maisto produktai">
+        <img src="{% static 'styles/kitiproduktai.jpg' %}" alt="Kiti maisto produktai" class="icon">
+        <p class="category-name">Kiti maisto produktai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Kompensuojami produktai">
+        <img src="{% static 'styles/Kompensuojamiproduktai.jpg' %}" alt="Kompensuojami produktai" class="icon">
+        <p class="category-name">Kompensuojami produktai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Mėsa Paukštiena Žuvis Kiaušiniai">
+        <img src="{% static 'styles/meats1.png' %}" alt="Mėsa Paukštiena Žuvis Kiaušiniai" class="icon">
+        <p class="category-name">Mėsa Paukštiena Žuvis Kiaušiniai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Riešutai Sėklos">
+        <img src="{% static 'styles/nuts.jpg' %}" alt="Riešutai Sėklos" class="icon">
+        <p class="category-name">Riešutai Sėklos</p>
+      </div>
+    </div>
+    
+    <div class="icon-container">
+      <!-- Display products from Pienas ir jo produktai to Daržovės -->
+      <div class="icon-wrapper" data-category="Pienas ir jo produktai">
+        <img src="{% static 'styles/Pienoproduktai.jpg' %}" alt="Pienas ir jo produktai" class="icon">
+        <p class="category-name">Pienas ir jo produktai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Padažas">
+        <img src="{% static 'styles/sauces.jpg' %}" alt="Padažas" class="icon">
+        <p class="category-name">Padažai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Žolelės ir prieskoniai">
+        <img src="{% static 'styles/spices.jpg' %}" alt="Žolelės ir prieskoniai" class="icon">
+        <p class="category-name">Žolelės ir prieskoniai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Cukrus Cukraus produktai Medus">
+        <img src="{% static 'styles/sugarhoney.png' %}" alt="Cukrus Cukraus produktai Medus" class="icon">
+        <p class="category-name">Cukrus Medus Džemai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Vaisiai">
+        <img src="{% static 'styles/fruits.jpg' %}" alt="Vaisiai" class="icon">
+        <p class="category-name">Vaisiai</p>
+      </div>
+      <div class="icon-wrapper" data-category="Daržovė">
+        <img src="{% static 'styles/Vegetables.jpeg' %}" alt="Daržovė" class="icon">
+        <p class="category-name">Daržovės</p>
+      </div>
+    </div>
+
+    <form action="" method="GET" class="search-form" id="searchForm">
+      <input type="text" name="query" class="search-input" placeholder="Ieškoti pagal produkto vardą">
+      
+    </form>
+
+    <table class="table" id="productTable">
+      <thead>
+        <tr>
+          <th>Pavadinimas</th>
+          <th>Kalorijos</th>
+          <th>Riebalai</th>
+          <th>Angliavandeniai</th>
+          <th>Baltymai</th>
+          <th>Fenilalaninas(mg)</th>
+          <th>Namų matas(svoris) fenilalaninas</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for product in products %}
+          <tr data-category="{{ product.category }}">
+            <td class="{% if product.color == 'Raudona' %}high{% elif product.color == 'Geltona' %}medium{% else %}low{% endif %}">
+              {{ product.name }}
+            </td>
+            <td>{{ product.calories }}</td>
+            <td>{{ product.total_fat }}</td>
+            <td>{{ product.fiber }}</td>
+            <td>{{ product.protein }}</td>
+            <td>{{ product.phenylalanine }}</td>
+            <td>
+                {{ product.measure }}
+                {% if product.measure != "-" %}
+                 ({{ product.homeWeight }}g) {{ product.homePhenylalanine}}(mg) Phe
+                {% endif %}
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+    const searchInput = document.querySelector('.search-input');
+    const productTable = document.getElementById('productTable');
+    const iconContainers = document.querySelectorAll('.icon-container'); // Update this line
+    const iconWrappers = document.querySelectorAll('.icon-wrapper');
+
+    iconWrappers.forEach(wrapper => {
+      wrapper.addEventListener('click', function(event) {
+        const isClicked = wrapper.classList.contains('clicked');
+        iconWrappers.forEach(item => {
+          item.classList.remove('clicked');
+        });
+        if (!isClicked) {
+          wrapper.classList.add('clicked');
+        } else {
+          // Remove category parameter from the URL and reload the page
+          const url = new URL(window.location.href);
+          url.searchParams.delete('category');
+          window.location.href = url.href;
+        }
+      });
+    });
+
+    // Add click event listener to each icon container
+    iconContainers.forEach(iconContainer => { // Update this block
+      iconContainer.addEventListener('click', function(event) { // Update this line
+        const target = event.target;
+        if (target.tagName === 'IMG') {
+          const category = target.parentElement.getAttribute('data-category');
+          if (category) {
+            // Remove category and query parameters from the URL
+            const url = new URL(window.location.href);
+            url.searchParams.delete('category');
+            url.searchParams.delete('query');
+            window.history.replaceState({}, '', url);
+
+            // Filter products based on the selected category
+            const rows = productTable.querySelectorAll('tbody tr');
+            rows.forEach(row => {
+              const rowCategory = row.getAttribute('data-category');
+              if (rowCategory === category || category === 'Visi produktai') {
+                row.style.display = ''; // Show rows that match the selected category
+              } else {
+                row.style.display = 'none'; // Hide rows that don't match the selected category
+              }
+            });
+          }
+        }
+      });
+    });
+
+    searchInput.addEventListener('input', function(event) {
+      event.preventDefault();
+      const formData = new FormData(document.getElementById('searchForm'));
+      const query = formData.get('query');
+
+      if (query) {
+        // Remove category parameter from the URL
+        const url = new URL(window.location.href);
+        url.searchParams.delete('category');
+        window.history.replaceState({}, '', url);
+
+        fetch(`?query=${encodeURIComponent(query)}`)
+          .then(response => response.text())
+          .then(data => {
+            const tempElement = document.createElement('div');
+            tempElement.innerHTML = data;
+            const rows = tempElement.querySelectorAll('tbody tr');
+            while (productTable.rows.length > 1) {
+              productTable.deleteRow(1);
+            }
+            rows.forEach(row => {
+              productTable.appendChild(row);
+            });
+          })
+          .catch(error => {
+            console.error('Error:', error);
+          });
+      }
+    });
+  });
+  </script>
+  
+</body>
+{% endblock %}

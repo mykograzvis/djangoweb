@@ -1,0 +1,81 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>
+    {% block title %}
+      Django App
+    {% endblock %}
+  </title>
+  
+  <link rel="stylesheet" type="text/css" href="{% static 'styles/register.css' %}">
+  <link rel="stylesheet" type="text/css" href="{% static 'styles/errors.css' %}">
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css">
+  <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+  
+</head>
+<body>
+  <div class="wrapper">
+    <form action="/register/" method="post">
+        {% csrf_token %}
+        <h1> Registracijos forma </h1>
+        <!-- register.html -->
+        {% if messages %}
+          {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-error{% elif message.tags == 'success' %}alert-success{% endif %}" role="alert">
+              {{ message }}
+            </div>
+          {% endfor %}
+        {% endif %}
+        <div class="input-box">
+          <input type="text" name="email" placeholder="Elektroninis paštas" required>
+          <i class='bx bx-envelope' ></i>
+        </div>
+        <div class="input-box">
+          <input type="text" name="username" placeholder="Slapyvardis" required>
+          <i class='bx bxs-mask' ></i>
+        </div>
+
+        <div class="input-box">
+          <input type="text" name="name" placeholder="Vardas" required>
+          <i class='bx bxs-user'></i>
+        </div>
+
+        <div class="input-box">
+          <input type="text" name="lastName" placeholder="Pavardė" required>
+          <i class='bx bxs-user'></i>
+        </div>
+        <div class="input-box">
+          <input type="text" name="phoneNumber" placeholder="Telefono numeris (+370)" required>
+          <i class='bx bxs-phone'></i>
+        </div>
+        <div class="input-box">
+          <input type="date" name="birthday" placeholder="Gimimo data" required>
+          <i class='bx bx-calendar' ></i>
+        </div>
+
+        <div class="input-box">
+          <input type="password" name="password" placeholder="Slaptažodis" required>
+          <i class='bx bxs-lock-alt'></i>
+        </div>
+        <div class="input-box">
+            <input type="password" name="repeat_password" placeholder="Pakartoti slaptažodė" required>
+            <i class='bx bxs-lock-alt'></i>
+          </div>
+        
+        <div class="login-link">
+          <p> Turi paskyrą? <a href="{% url 'login' %}"> Prisijungti! </a></p>
+        </div>
+       
+        <button type="submit" class="btn btn-primary custom-button"> Registruotis </button>
+        
+    </form>
+  </div>
+  
+</body>
+</html>

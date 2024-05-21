@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+{% load static %} 
+
+{% block title %}
+    Kraujo Tyrimai
+{% endblock %}
+
+{% block content %}
+    <style>
+        /* CSS styles inline */
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f2f2f2;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            color: #333;
+        }
+        .form-container {
+            background-color: #fff;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            max-width: 350px; /* Adjust the width of the forms */
+            width: 100%; /* Ensure each form takes up the same width */
+            height: 270px; /* Set a fixed height for both form containers */
+            margin: 0 auto 20px; /* Center the forms and add space below them */
+        }
+        label {
+            display: inline-block;
+            width: 100%; /* Set the width of the label */
+            margin-bottom: 10px;
+            color: #555;
+        }
+        input[type="date"],
+        input[type="number"],
+        select {
+            width: 100%; /* Set the width of the input fields */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-size: 14px;
+        }
+        input[type="submit"] {
+            width: 100%;
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
+        }
+        .chart-img {
+            display: block;
+            margin: 20px auto;
+            max-width: 100%;
+        }
+        .error-container {
+            margin: 20px auto;
+            width: 100%;
+            text-align: center;
+        }
+        .alert {
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .alert-success {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .tooltip {
+            position: relative;
+            display: inline-block;
+            border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+        }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 120px;
+            background-color: black;
+            color: #fff;
+            text-align: center;
+            border-radius: 6px;
+            padding: 5px 0;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -60px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext {
+            visibility: visible;
+            opacity: 1;
+        }
+        .form-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            gap: 20px; /* Add space between the forms */
+        }
+        .form-container .input-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        select {
+            margin-bottom: 25px; /* Add margin to the bottom of the select element */
+        }
+        .form-container:first-child .filtruoti-btn {
+    margin-top: 30px; /* Adjust the margin-top value to move the button downwards */
+    }
+    h1 {
+    text-align: center;
+    color: #333;
+    margin-top: 20px; /* Add space between the top of the page and the h1 */
+    margin-bottom: 20px; /* Add space below the h1 */
+}
+
+
+    </style>
+
+    <h1>Kraujo tyrimų sekimas</h1>
+    
+    {% if messages %}
+        <div class="error-container">
+            {% for message in messages %}
+                <div class="alert {% if message.tags == 'success' %}alert-success{% else %}alert-danger{% endif %}" role="alert">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+    
+    <div class="form-wrapper">
+        <div class="form-container">
+            <form method="post" action="{% url 'kraujo_tyrimai:kraujotyrview' %}">
+                {% csrf_token %}
+                <h2>Filtruoti pagal metus</h2>
+                <label for="year" style="display: inline-block;">Metai:</label>
+                <select name="year" id="year">
+                    {% for year in years %}
+                        <!-- Set the selected attribute if the year matches the selected_year -->
+                        <option value="{{ year }}" {% if year == selected_year %} selected {% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+                <input type="submit" value="Filtruoti" class="filtruoti-btn">
+            </form>
+        </div>
+        
+        <div class="form-container">
+            <form method="post" action="{% url 'kraujo_tyrimai:create_kraujo_tyrimas' %}">
+                {% csrf_token %}
+                <input type="hidden" name="selected_year" value="{{ selected_year }}">
+                <h2>Pridėti kraujo tyrimą</h2>
+                <div class="input-container">
+                    <label for="id_data">Data:</label>
+                    <input type="date" name="data" id="id_data">
+                </div>
+                <div class="input-container">
+                    <label for="id_fenilalaninas">Fenilalaninas µmol/l:</label>
+                    <input type="number" name="fenilalaninas" id="id_fenilalaninas">
+                </div>
+                <input type="submit" value="Pridėti">
+            </form>
+        </div>
+    </div>
+    
+    {% if chart %}
+        {{ chart|safe }}
+    {% endif %}
+    
+    <script src="https://mpl-cursors-temmiexue.vercel.app/dist/mplcursors.min.js"></script>
+    <script>
+        // Activate hover functionality for the chart image
+        mplcursors.enable(document.querySelectorAll('.chart-img'));
+    </script>
+    <script>
+        // Get the select element
+        const selectElement = document.getElementById('year');
+        // Get the label element
+        const labelElement = document.querySelector('label[for="year"]');
+        // Set the initial title
+        labelElement.innerText = 'Metai: ' + selectElement.value;
+    
+        // Add change event listener to update the title when the selection changes
+        selectElement.addEventListener('change', function() {
+            labelElement.innerText = 'Metai: ' + selectElement.value;
+        });
+    </script>
+    
+
+{% endblock %}

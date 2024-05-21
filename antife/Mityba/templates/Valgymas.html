@@ -1,0 +1,423 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<head>
+  <link rel="stylesheet" type="text/css" href="{% static 'styles/valgom.css' %}">
+  <style>
+    /* valgom.css */
+
+    body {
+  font-family: Arial, sans-serif;
+  background-image: url("{% static 'styles/paveiksleliai/back.jpg' %}");
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+}
+
+/* Style the main heading */
+h1 {
+  font-size: 30px;
+  color: #777676;
+  font-weight: bold;
+  text-align: center;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
+  padding: 15px 20px; /* Add some padding */
+  background-color: #e0e0e0; /* Light gray background */
+  border-radius: 10px; /* Rounded corners */
+  margin-bottom: 20px; /* Add some margin */
+  border: 4px solid #b3b3b3; /* Add a solid border */
+}
+
+h2, h3 {
+  font-family: serif; /* Different font for headings */
+  color: #777676; /* Dark gray */
+  text-align: center;
+  font-weight: bold;
+  padding: 10px;
+  background-color: #f5f5f5; /* White background */
+  border-radius: 10px; /* Rounded corners */
+  margin-bottom: 10px; /* Add some margin */
+  
+}
+h2{
+  border: 4px solid #b3b3b3; /* Add a solid border */
+}
+
+.valgymo-container {
+  background-color: #f5f5f5;
+  padding: 15px; /* Add some padding for spacing (optional) */
+  border-radius: 10px; /* Rounded corners (optional) */
+  margin-bottom: 20px;
+  border: 4px solid #b3b3b3; /* Add a solid border */
+}
+
+/* Style the table */
+.valgymai-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+
+/* Style the table headers */
+.valgymai-table th {
+    background-color: #f2f2f2; /* Light gray background */
+    text-align: left;
+    padding: 8px;
+}
+
+/* Style the table cells */
+.valgymai-table td {
+    border: 1px solid #ddd; /* Light gray border */
+    padding: 8px;
+}
+
+.styled-cell {
+  display: inline-block; /* Display as inline-block to remove table layout */
+  border-left: 1px solid black; /* Set left border */
+  border-top: none; /* Disable top border */
+  border-right: none; /* Disable right border */
+  border-bottom: none; /* Disable bottom border */
+  padding: 0; /* Remove padding */
+  background-color: transparent; /* Set background color to transparent */
+} 
+
+.valgymai-table td {
+    position: relative; /* Ensure positioning of pseudo-element */
+}
+
+/* Add this CSS to hide the warning message initially */
+.hidden {
+  display: none;
+}
+
+.confirmation-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: 0px 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-content {
+  text-align: center;
+}
+
+.buttons button {
+  margin: 10px;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.valgymai-table td.hoverable:hover::after {
+    content: attr(data-aprasas); /* Display description on hover */
+    position: absolute; /* Position relative to the cell */
+    top: 100%; /* Position below the cell */
+    left: 50%; /* Align with the center of the cell */
+    transform: translateX(-20%); /* Center horizontally */
+    background-color: #f9f9f9; /* Light background color */
+    color: #333; /* Text color */
+    font-size: 14px; /* Font size */
+    padding: 10px; /* Padding for the tooltip */
+    border-radius: 5px; /* Rounded corners */
+    border: 1px solid #ccc; /* Border */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Shadow */
+    z-index: 1; /* Ensure the tooltip appears above other content */
+    width: 800px; /* Set a fixed width */
+    max-width: 250%; /* Limit the maximum width */
+    white-space: pre-wrap; /* Allow line breaks */
+}
+
+.amountWarning {
+  color: red;
+  font-size: 12px;
+  margin-top: 5px;
+}
+
+.buttons button#confirmPaste {
+  background-color: #007bff;
+  color: white;
+}
+
+.buttons button#cancelPaste {
+  background-color: #ccc;
+  color: black;
+}
+
+.add-new-form {
+    margin-top: 20px;
+    padding: 20px;
+    background-color: transparent; /* Make the background transparent */
+    border: none; /* Remove border */
+    box-shadow: none; /* Remove box shadow */
+  }
+
+  .add-new-form input[type="text"],
+  .add-new-form input[type="number"],
+  .add-new-form select {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+    font-size: 16px;
+  }
+
+  .add-new-form .amountWarning {
+    color: red;
+  }
+
+  .add-new-form .add-item-button {
+    background-color: #28a745; /* Green color for button */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 10px 20px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+
+  .add-new-form .add-item-button:hover {
+    background-color: #218838; /* Darker green color on hover */
+  }
+
+  </style>
+</head>
+
+<body>
+  <h1><span id="selectedDateOutput"></span> dienos valgiaraštis</h1>
+  <div class="container">
+    <h2>Bendras fenilalaninas: {{ valgymai_list.total_fenilalaninas }} mg<br>Bendras baltymas: {{ valgymai_list.total_baltymas }} g</h2>
+    {% for valgymas in valgymai_list %}
+    <div class="valgymo-container">
+      <h3>{{ valgymas.tipas }}</h3>
+      {% if valgymas.valgymo_receptas_set.all or valgymas.valgomas_produktas_set.all %}
+      <table class="valgymai-table">
+        <thead>
+          <tr>
+            <th>Patiekalas</th>
+            <th>Kiekis (g)</th>
+            <th>Baltymai (g)</th>
+            <th>Fenilalaninas (mg)</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for valgomasreceptas in valgymas.valgymo_receptas_set.all %}
+            <tr>
+              <td class="hoverable" data-aprasas="Ingridientai:
+    {% for recepto_produktas in valgomasreceptas.fk_Receptasid_Receptas.recepto_produktai_set.all %}{{ recepto_produktas.fk_Produktasid_Produktas.name }} - {{ recepto_produktas.amount }} g. {% if not forloop.last %} {% endif %}
+    {% endfor %}&#10;Aprašymas:&#10;    {{ valgomasreceptas.fk_Receptasid_Receptas.aprasas }}">
+    {{ valgomasreceptas.fk_Receptasid_Receptas.pavadinimas }}
+</td>
+              <td>{{ valgomasreceptas.kiekis }} </td>
+              <td>{{ valgomasreceptas.total_baltymas }} </td>
+              <td>{{ valgomasreceptas.total_fenilalaninas }} </td>
+              <td class="styled-cell"><form action="{% url 'mityba:delete_valgomasReceptas' valgymo_receptas_id=valgomasreceptas.id %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-danger" type="submit">X</button>
+            </form></td>
+            </tr>
+          {% endfor %}
+          {% for valgomasproduktas in valgymas.valgomas_produktas_set.all %}
+            <tr>
+              <td>{{ valgomasproduktas.fk_Produktasid_Produktas.name }}</td>
+              <td>{{ valgomasproduktas.kiekis }} </td>
+              <td>{{ valgomasproduktas.total_baltymas }} </td>
+              <td>{{ valgomasproduktas.total_fenilalaninas }} </td>
+              <td class="styled-cell"><form action="{% url 'mityba:delete_valgomasProduktas' valgomas_produktas_id=valgomasproduktas.id %}" method="post">
+                {% csrf_token %}
+                <button class="btn btn-danger" type="submit">X</button>
+            </form></td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% endif %}
+      <button class="btn btn-success add-new-button" data-index="{{ forloop.counter }}">➕</button> 
+      <div class="add-new-form hidden" data-index="{{ forloop.counter }}">
+        <input type="text" class="searchInput" placeholder="Paieška">
+        <br>
+        <div class="filteredOptions"></div>
+        <select class="recipeSelect" name="selected_recipe"></select>
+        <br>
+        <input type="number" class="amountInput" placeholder="Kiekis gramais">
+        <br>
+        <div class="amountWarning hidden">Privalote įvesti kiekį!</div>
+        <button class="add-item-button">Pridėti</button>
+      </div>
+    </div>
+    {% endfor %}
+    
+  </div>
+  <button class="btn btn-success" id="copyMealPlanButton" onclick="copyMealPlan()">Kopijuoti valgiaraštį</button>
+  <button class="btn btn-success hidden" id="pasteMealPlanButton" onclick="pasteMealPlan()">Įklijuoti nukopijuotą valgiaraštį</button>
+  <div id="confirmationDialog" class="confirmation-dialog hidden">
+    <div class="dialog-content">
+      <p>Ar tikrai norite pakeisti dabartinį mitybos planą, nukopijuotu?</p>
+      <p>Kopijos data: </p><span id="copyDateOutput"></span> </p>
+      <div class="buttons">
+        <button id="confirmPaste">Taip</button>
+        <button id="cancelPaste">Ne</button>
+      </div>
+    </div>
+  </div>
+</body>
+<script>
+  const addNewForm = document.querySelector('.add-new-form');
+  
+  // Hide the element initially
+  addNewForm.classList.add('hidden');
+  const selectedDate = localStorage.getItem('selectedDate');
+  document.getElementById('selectedDateOutput').textContent = selectedDate;
+
+  const copyDate = localStorage.getItem('copyDate');
+  if (copyDate !== null){
+    const pasteButton = document.getElementById('pasteMealPlanButton');
+    pasteButton.classList.remove('hidden');
+  }
+  const all_receptai = JSON.parse('{{ all_receptai|escapejs }}');
+  const all_products = JSON.parse('{{ all_products|escapejs }}');
+
+  const addNewButtons = document.querySelectorAll('.add-new-button');
+
+addNewButtons.forEach(button => {
+  button.addEventListener('click', handleAddNewClick);
+});
+
+function handleAddNewClick(event) {
+  const buttonIndex = this.getAttribute('data-index'); // Get the index of the button
+
+  document.querySelectorAll('.add-new-form').forEach(div => {
+    div.classList.add('hidden');
+  });
+
+const addNewForm = document.querySelector(`.add-new-form[data-index="${buttonIndex}"]`);
+  addNewForm.classList.remove('hidden');
+  addNewForm.classList.add('flex');
+
+  const searchInput = addNewForm.querySelector('.searchInput');
+  searchInput.value = '';
+
+  const filteredOptions = addNewForm.querySelector('.filteredOptions');
+  filteredOptions.innerHTML = '';
+
+  const recipeSelect = addNewForm.querySelector('.recipeSelect');
+  recipeSelect.innerHTML = '';
+
+  const amountInput = addNewForm.querySelector('.amountInput');
+  amountInput.value = '';
+
+  all_receptai.forEach(receptas => {
+    const option = document.createElement('option');
+    option.value = receptas.pk;
+    option.text = receptas.fields.pavadinimas;
+    recipeSelect.add(option);
+  });
+  all_products.forEach(prod => {
+    const option = document.createElement('option');
+    option.value = prod.pk;
+    option.text = prod.fields.name;
+    recipeSelect.add(option);
+  });
+
+  console.log(recipeSelect);
+  searchInput.addEventListener('input', () => {
+    const searchText = searchInput.value.toLowerCase();
+    const filteredReceptai = all_receptai.filter(receptas => receptas.fields.pavadinimas.toLowerCase().includes(searchText));
+    const filteredProducts = all_products.filter(receptas => receptas.fields.name.toLowerCase().includes(searchText));
+    updateOptions(recipeSelect, filteredReceptai, filteredProducts);
+    console.log(recipeSelect);
+  });
+
+  addNewButtons.forEach(button => {
+    if (button.getAttribute('data-index') !== buttonIndex) {
+      button.classList.remove('hidden');
+    }
+  });
+
+  this.classList.add('hidden');
+}
+
+function updateOptions(selectElement, filteredReceptai, filteredProducts) {
+    selectElement.innerHTML = '';
+
+    filteredReceptai.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.pk;
+      option.text = item.fields.pavadinimas;
+      selectElement.add(option);
+    });
+    filteredProducts.forEach(item => {
+      const option = document.createElement('option');
+      option.value = item.pk;
+      option.text = item.fields.name;
+      selectElement.add(option);
+    });
+  }
+
+const addItemButtons = document.querySelectorAll('.add-item-button');
+
+addItemButtons.forEach(button => {
+  button.addEventListener('click', handleAddItemClick);
+});
+
+function handleAddItemClick(event) {
+  const addNewForm = this.parentElement;
+  const buttonIndex = addNewForm.getAttribute('data-index');
+  const selectedID = addNewForm.querySelector('.recipeSelect').value;
+  const selectedOption = addNewForm.querySelector('.recipeSelect').options[addNewForm.querySelector('.recipeSelect').selectedIndex];
+  const selectedName = selectedOption.text;
+  const amount = addNewForm.querySelector('.amountInput').value;
+
+  if (amount.trim() === '') {
+    const amountWarning = addNewForm.querySelector('.amountWarning');
+    amountWarning.textContent = 'Privalote įvesti kiekį!';
+    amountWarning.classList.remove('hidden');
+    return;
+  }
+
+  if (parseFloat(amount) < 0) {
+    const amountWarning = addNewForm.querySelector('.amountWarning');
+    amountWarning.textContent = 'Kiekis negali būti neigiamas!';
+    amountWarning.classList.remove('hidden');
+    return;
+  }
+
+  const url = `{% url 'mityba:add_valgymas' %}?selectedID=${selectedID}&selectedName=${selectedName}&amount=${amount}&buttonIndex=${buttonIndex}`;
+  window.location.href = url;
+}
+
+//kopijavimas
+function copyMealPlan() {
+  localStorage.setItem('copyDate', selectedDate);
+  const copyDate = localStorage.getItem('copyDate');
+  alert("Mitybos planas nukopijuotas!");
+  window.location.href = "{% url 'mityba:saveCopy' %}";
+}
+//perkuriam dabartini valgiarasti pagal kita
+function pasteMealPlan() {
+  document.getElementById('copyDateOutput').textContent = copyDate;
+  const confirmationDialog = document.getElementById('confirmationDialog');
+  confirmationDialog.classList.remove('hidden');
+
+  document.getElementById('confirmPaste').addEventListener('click', () => {
+    window.location.href = "{% url 'mityba:copyValgiarastis' %}";
+    confirmationDialog.classList.add('hidden');
+  });
+
+  document.getElementById('cancelPaste').addEventListener('click', () => {
+    confirmationDialog.classList.add('hidden');
+  });
+}
+
+</script>
+{% endblock %}

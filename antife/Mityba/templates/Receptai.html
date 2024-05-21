@@ -1,0 +1,158 @@
+<!-- Receptai.html -->
+
+{% extends "base.html" %}
+
+{% block content %}
+    <div class="container">
+        <h2>Receptai</h2>
+
+        <a href="{% url 'mityba:create_recipe' %}" class="btn btn-primary custom-button">Sukurti naują receptą</a>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+        <table class="styled-table">
+            <thead>
+                <tr>
+                    <th>Pavadinimas</th>
+                    <th>Kalorijos (kcal)</th>
+                    <th>Fenilalaninas</th>
+                    <th>Baltymai (g)</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for receptas in receptai_list %}
+                    <tr>
+                        <td class="name-cell" data-toggle="aprasas-{{ forloop.counter }}" data-ingredientai="ingredientai-{{ forloop.counter }}">{{ receptas.pavadinimas }}</td>
+                        <td>{{ receptas.kalorijos }}</td>
+                        <td>{{ receptas.fenilalaninas }}</td>
+                        <td>{{ receptas.baltymai }}</td>
+                        <td><button class="favorite-recipe-btn" data-recipe-id="{{ receptas.id }}"><i class="fa fa-star{% if receptas.id in user_favorite_ids %} fa-star-blue{% endif %}"></i></button></td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" id="ingredientai-{{ forloop.counter }}" style="display: none; padding: 10px; background-color: #f2f2f2; border: 1px solid #ddd;">
+                            <h3>Ingredientai</h3>
+                            <ul>
+                                {% for recepto_produktai in receptas.recepto_produktai_set.all %}
+                                    <li>{{ recepto_produktai.fk_Produktasid_Produktas.name }} - {{ recepto_produktai.amount }}</li>
+                                {% endfor %}
+                            </ul>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td colspan="4" id="aprasas-{{ forloop.counter }}" style="display: none; padding: 10px; background-color: #f2f2f2; border: 1px solid #ddd;">
+                            <h3>Aprasas</h3>
+                            <p>{{ receptas.aprasas }}</p>
+                        </td>
+                    </tr>
+                    
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Event listener for clicking on recipe cells
+            const nameCells = document.querySelectorAll('.name-cell');
+            nameCells.forEach(cell => {
+                cell.addEventListener('click', function () {
+                    const targetIdAprasas = this.getAttribute('data-toggle');
+                    const targetIdIngredientai = this.getAttribute('data-ingredientai');
+                    const targetElementAprasas = document.getElementById(targetIdAprasas);
+                    const targetElementIngredientai = document.getElementById(targetIdIngredientai);
+                    
+                    // Toggle the display of both description and ingredients sections
+                    if (targetElementAprasas.style.display === 'none') {
+                        targetElementAprasas.style.display = '';
+                        targetElementIngredientai.style.display = '';
+                    } else {
+                        targetElementAprasas.style.display = 'none';
+                        targetElementIngredientai.style.display = 'none';
+                    }
+                });
+            });
+    
+            // Event listener for adding or removing recipe from favorites
+            const favoriteRecipeBtns = document.querySelectorAll('.favorite-recipe-btn');
+            favoriteRecipeBtns.forEach(btn => {
+                btn.addEventListener('click', function () {
+                    const recipeId = this.getAttribute('data-recipe-id');
+                    const icon = this.querySelector('i');
+
+                    // Send AJAX request to add or remove recipe from favorites
+                    fetch(`/mityba/add_to_favorites/${recipeId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': '{{ csrf_token }}'
+                        },
+                    })
+                    .then(response => {
+                        if (response.ok) {
+                            // Reload the page after successful addition or removal from favorites
+                            location.reload();
+                        } else {
+                            console.error('Failed to update recipe favorites');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error updating recipe favorites:', error);
+                    });
+                });
+            });
+        });
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .styled-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 16px;
+            text-align: left;
+        }
+
+        .styled-table th,
+        .styled-table td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+            cursor: pointer;
+        }
+
+        .styled-table th {
+            background-color: #3498db;
+            color: #fff;
+        }
+
+        .styled-table tbody tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+
+        .name-cell {
+            color: #3498db;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        /* Style for blue star icon */
+        .fa-star-blue {
+            color: blue;
+        }
+    </style>
+{% endblock %}

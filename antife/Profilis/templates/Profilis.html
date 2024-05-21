@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}
+    Profilis
+{% endblock %}
+{% load static %} 
+
+{% block content %}
+
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/errors.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'styles/profile.css' %}">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+        <h1>Profilo informacija</h1>
+        <!-- Button to toggle edit mode -->
+        <button type="button" class="btn btn-primary custom-button" id="editProfileBtn">Redaguoti</button>
+    </div>
+    {% if messages %}
+        <div class="error-container">
+            {% for message in messages %}
+                {% if message.tags == 'error' %}
+                    <div class="alert alert-danger" role="alert">
+                        {{ message }}
+                    </div>
+                {% elif message.tags == 'success' %}
+                    <div class="alert alert-success" role="alert">
+                        {{ message }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endif %}
+    <div class="profile-info" id="profileInfoContainer">
+        <div class="profile-info-item">
+            {% if user_id %}
+                <p>Unikalus numeris: {{ user_id }}</p>
+            {% else %}
+                <p>Unikalus numeris nepasiekiamas</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if username %}
+                <p>Slapyvardis: {{ username }}</p>
+            {% else %}
+                <p>Slapyvardis nepasiekiamas</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if vardas %}
+                <p>Vardas: {{ vardas }}</p>
+            {% else %}
+                <p>Vardas nepasiekiamas</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if pavarde %}
+                <p>Pavardė: {{ pavarde }}</p>
+            {% else %}
+                <p>Pavardė nepasiekiama</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if telefonas %}
+                <p>Telefono numeris: {{ telefonas }}</p>
+            {% else %}
+                <p>Telefono numeris nepasiekiamas</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if gimimo_Data %}
+                <p>Gimimo data: {{ gimimo_Data }}</p>
+            {% else %}
+                <p>Gimimo data nepasiekiama</p>
+            {% endif %}
+        </div>
+        <div class="profile-info-item">
+            {% if el_pastas %}
+                <p>Elektroninis paštas: {{ el_pastas }}</p>
+            {% else %}
+                <p>Elektroninis paštas nepasiekiamas</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Editing form (initially hidden) -->
+    <form id="editProfileForm" style="display: none;" action="{% url 'profilis:save_profile_changes' %}" method="post">
+
+        {% csrf_token %}
+        <!-- Include input fields for each profile information item -->
+        <div class="profile-info-item">
+            <label for="username">Username:</label>
+            <input type="text" id="username" name="username" value="{{ username }}">
+        </div>
+        <div class="profile-info-item">
+            <label for="vardas">Vardas:</label>
+            <input type="text" id="vardas" name="vardas" value="{{ vardas }}">
+        </div>
+        <div class="profile-info-item">
+            <label for="pavarde">Pavardė:</label>
+            <input type="text" id="pavarde" name="pavarde" value="{{ pavarde }}">
+        </div>
+        <div class="profile-info-item">
+            <label for="telefonas">Telefono numeris:</label>
+            <input type="text" id="telefonas" name="telefonas" value="{{ telefonas }}">
+        </div>
+        <div class="profile-info-item">
+            <label for="gimimo_Data">Gimimo data:</label>
+            <div class="input-box">
+                <input type="date" name="birthday" placeholder="Gimimo data" required>
+                <i class='bx bx-calendar' ></i>
+              </div>
+        </div>
+        <div class="profile-info-item">
+            <label for="el_pastas">Elektroninis paštas:</label>
+            <input type="text" id="el_pastas" name="el_pastas" value="{{ el_pastas }}">
+        </div>
+
+        <!-- Submit button -->
+        <button type="submit" class="btn btn-primary">Išsaugoti</button>
+    </form>
+
+    <script>
+        document.getElementById("editProfileBtn").addEventListener("click", function() {
+            // Toggle visibility of the editing form
+            var editProfileForm = document.getElementById("editProfileForm");
+            editProfileForm.style.display = editProfileForm.style.display === "none" ? "block" : "none";
+    
+            // Toggle visibility of the profile information container
+            var profileInfoContainer = document.getElementById("profileInfoContainer");
+            profileInfoContainer.style.display = profileInfoContainer.style.display === "none" ? "block" : "none";
+    
+            // Set the value of the date input field to the current gimimo_Data
+            var gimimo_Data = "{{ gimimo_Data }}";  
+            var birthdayInput = document.getElementsByName("birthday")[0];
+            // Check if gimimo_Data is a valid date string
+            if (gimimo_Data && gimimo_Data !== 'None') {
+                birthdayInput.value = gimimo_Data;
+            }
+        });
+    </script>
+    
+{% endblock %}
